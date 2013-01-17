@@ -28,6 +28,16 @@ function Ball:init(x, y, r)
    self.is_dead         = false
 end
 
+-- Move the ball by one step. It requires dt to keep consistency between pcs
+function Ball:move(dt)
+   self.x = self.x + self.direction_x * (self.speed * dt)
+   self.y = self.y + self.direction_y * (self.speed * dt)
+
+   if self.will_accelerate then
+      self.speed = self.speed + self.accel_rate * dt
+   end
+end
+
 -- If 'will_accelerate' is true, on each step from now on,
 -- ball's speed will increase by 'ammount' (it can be negative)
 function Ball:accelerate(will_accelerate, rate)
@@ -40,16 +50,6 @@ end
 -- Keeps the ball's speed constant from now on
 function Ball:reset_speed()
    self.speed = 100
-end
-
--- Move the ball by one step. It requires dt to keep consistency between pcs
-function Ball:move(dt)
-   self.x = self.x + self.direction_x * (self.speed * dt)
-   self.y = self.y + self.direction_y * (self.speed * dt)
-
-   if self.will_accelerate then
-      self.speed = self.speed + self.accel_rate * dt
-   end
 end
 
 -- Test if the ball has reached the end of the screen and needs bouncing.
@@ -65,7 +65,8 @@ function Ball:bounce_if_out_of_bounds()
       will_bounce_y = true
    end
    if self.y >= max_play_y then
-      self.is_dead  = true
+      --      self.is_dead  = true
+      will_bounce_y = true
    end
 
    self:bounce(will_bounce_x, will_bounce_y)
@@ -84,6 +85,7 @@ end
 
 -- I assume the object has these properties:
 --   x, y, width and height
+-- Returns true if bounced, false if not
 function Ball:bounce_if_collided_with(object)
    if not (object.x and object.y and object.width and object.height) then
       return false
@@ -103,6 +105,10 @@ function Ball:bounce_if_collided_with(object)
    -- collided on the left or right of 'object'
    elseif self.y < by and ay > object.y and ax < bx and ax > object.x then
       will_bounce_x = true
+   end
+
+   if not will_bounce_x and not will_bounce_y then
+      return false
    end
 
    self:bounce(will_bounce_x, will_bounce_y)

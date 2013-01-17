@@ -1,10 +1,11 @@
 -- lbreakout - a simple breakout game in lua with love
 require 'src.ball'
 require 'src.pad'
+require 'src.block'
 
--- actual screen size
-screen_width  = 600
-screen_height = 500
+-- actual screen size (default: 600x500)
+screen_width  = love.graphics.getWidth()
+screen_height = love.graphics.getHeight()
 -- but the game objects only act on this
 min_play_x = 0
 min_play_y = 0
@@ -12,14 +13,25 @@ max_play_x = screen_width
 max_play_y = screen_height
 
 function love.load()
-   ball = Ball(max_play_x / 2, max_play_y / 2)
+   ball   = Ball(max_play_x / 2, max_play_y / 2)
    player = Pad(max_play_x / 2, max_play_y - 50)
+   blocks = BlockContainer(1, 30, 58, 20)
 end
 
 function love.update(dt)
    ball:move(dt)
    player:move(dt)
    ball:bounce_if_collided_with(player)
+   for i = 1, blocks.height do
+      for j = 1, blocks.width do
+         if blocks.container[i][j] then
+            if ball:bounce_if_collided_with(blocks.container[i][j]) then
+               blocks:destroy_block(i, j)
+            end
+         end
+      end
+   end
+--   blocks:each_destroy_if(ball:bounce_if_collided_with)
    ball:bounce_if_out_of_bounds()
    if ball.is_dead then quit_game() end
 end
@@ -27,6 +39,7 @@ end
 function love.draw()
    ball:draw()
    player:draw()
+   blocks:draw()
 end
 
 function love.keypressed(key, unicode)
